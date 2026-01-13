@@ -1,0 +1,4 @@
+# Create .dockerignore file
+echo "node_modules" > .dockerignore
+echo ".git" >> .dockerignore
+echo "build" >> .dockerignore
