@@ -52,13 +52,110 @@ const App = () => {
     }
   });
   const [favorites, setFavorites] = useState([]);
-  const [favoritesLoading, setFavoritesLoading] = useState(false);
-  const [favoritesError, setFavoritesError] = useState(null);
   const [token, setToken] = useState(window.localStorage.getItem('token') || null);
   const [authUser, setAuthUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [showWelcome, setShowWelcome] = useState(!token);
+
+  // Define fetchFavorites function (stable and resilient)
+  const fetchFavorites = useCallback(async (tokenArg, options = {}) => {
+    const { retries = 1, timeout = 10000 } = options;
+    const currentToken = tokenArg || token;
+    
+    // If user is logged in, show cached favorites immediately (fast UI on refresh)
+    try {
+      const cached = JSON.parse(window.localStorage.getItem('favorites') || '[]');
+      if (cached && cached.length) {
+        setFavorites(cached);
+        setFavoritesCount(cached.length);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    try {
+      // if token present, verify and fetch server-side favorites
+      if (currentToken) {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+          try {
+            const meRes = await fetch('/api/auth/me', {
+              headers: { Authorization: `Bearer ${currentToken}` },
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (meRes.ok) {
+              const me = await meRes.json();
+              setAuthUser(me);
+            } else {
+              // token invalid - clear and stop
+              setToken(null);
+              window.localStorage.removeItem('token');
+              throw new Error('Authentication failed');
+            }
+
+            const listRes = await fetch('/api/recipes', {
+              headers: { Authorization: `Bearer ${currentToken}` },
+              signal: controller.signal
+            });
+
+            if (listRes.ok) {
+              const items = await listRes.json();
+              setFavorites(items);
+              setFavoritesCount(items.length);
+              // persist a local cache for fast refreshes
+              try {
+                window.localStorage.setItem('favorites', JSON.stringify(items));
+              } catch (e) {
+                // ignore storage errors
+              }
+
+              return;
+            } else if (listRes.status >= 500 && attempt < retries) {
+              // try again on server errors
+              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+              continue;
+            } else {
+              // Non-recoverable server response
+              const body = await listRes.json().catch(() => ({}));
+              throw new Error(body.error || `Failed to load favorites (${listRes.status})`);
+            }
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+              // request timed out; try again if attempts remain
+              if (attempt < retries) {
+                await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                continue;
+              }
+            }
+            if (attempt < retries) {
+              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+              continue;
+            }
+            // rethrow after retries exhausted
+            throw fetchError;
+          }
+        }
+      }
+
+      // If no token (or token failed), fallback to localStorage
+      try {
+        const favs = JSON.parse(window.localStorage.getItem('favorites') || '[]');
+        setFavoritesCount(favs.length);
+        setFavorites(favs);
+      } catch (e) {
+        setFavoritesCount(0);
+        setFavorites([]);
+      }
+    } catch (e) {
+      console.error('Failed to fetch favorites:', e);
+    }
+  }, [token]);
 
   // Validate token on app startup
   useEffect(() => {
@@ -90,7 +187,7 @@ const App = () => {
     };
     
     validateToken();
-  }, []); // Run only once on app startup
+  }, [token, fetchFavorites]);
 
   useEffect(() => {
     // Ensure ownerId (per-browser user identifier)
@@ -161,6 +258,61 @@ const App = () => {
     };
   }, [showSaved, showCreate, showMyRecipes]);
 
+  const getRecipes = useCallback(async (query) => {
+    const q = query || searchTerm;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Using TheMealDB API (free, no API key required)
+      const apiUrl = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(q)}`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(apiUrl, {
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // Transform TheMealDB format to match existing Recipe component
+      const transformedRecipes = (data.meals || []).map(meal => ({
+        recipe: {
+          uri: meal.idMeal,
+          label: meal.strMeal,
+          image: meal.strMealThumb,
+          calories: Math.floor(Math.random() * 400) + 200, // TheMealDB doesn't provide calories
+          ingredients: Array.from({length: 20}, (_, i) => {
+            const ingredient = meal[`strIngredient${i + 1}`];
+            const measure = meal[`strMeasure${i + 1}`];
+            return ingredient && ingredient.trim() ? {
+              text: `${measure || ''} ${ingredient}`.trim(),
+              food: ingredient
+            } : null;
+          }).filter(Boolean)
+        }
+      }));
+      
+      setRecipes(transformedRecipes);
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please check your internet connection and try again.');
+      } else {
+        setError(err.message || 'Failed to fetch recipes');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm]);
+
   // Debounced live search: as user types, perform search after pause
   useEffect(() => {
     const term = (searchTerm || '').trim();
@@ -181,111 +333,7 @@ const App = () => {
     }, 450);
 
     return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
-  // Define fetchFavorites function (stable and resilient)
-  const fetchFavorites = useCallback(async (tokenArg = token, { retries = 1, timeout = 10000 } = {}) => {
-    setFavoritesLoading(true);
-    setFavoritesError(null);
-
-    // If user is logged in, show cached favorites immediately (fast UI on refresh)
-    try {
-      const cached = JSON.parse(window.localStorage.getItem('favorites') || '[]');
-      if (cached && cached.length) {
-        setFavorites(cached);
-        setFavoritesCount(cached.length);
-      }
-    } catch (e) {
-      // ignore parse errors
-    }
-
-    try {
-      const currentToken = tokenArg || token;
-      // if token present, verify and fetch server-side favorites
-      if (currentToken) {
-        let attempt = 0;
-        while (attempt <= retries) {
-          attempt += 1;
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-          try {
-            const meRes = await fetch('/api/auth/me', {
-              headers: { Authorization: `Bearer ${currentToken}` },
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (meRes.ok) {
-              const me = await meRes.json();
-              setAuthUser(me);
-            } else {
-              // token invalid - clear and stop
-              setToken(null);
-              window.localStorage.removeItem('token');
-              throw new Error('Authentication failed');
-            }
-
-            const listRes = await fetch('/api/recipes', {
-              headers: { Authorization: `Bearer ${currentToken}` },
-              signal: controller.signal
-            });
-
-            if (listRes.ok) {
-              const items = await listRes.json();
-              setFavorites(items);
-              setFavoritesCount(items.length);
-              // persist a local cache for fast refreshes
-              try {
-                window.localStorage.setItem('favorites', JSON.stringify(items));
-              } catch (e) {}
-
-              setFavoritesLoading(false);
-              return;
-            } else if (listRes.status >= 500 && attempt <= retries) {
-              // try again on server errors
-              await new Promise(r => setTimeout(r, 1000 * attempt));
-              continue;
-            } else {
-              // Non-recoverable server response
-              const body = await listRes.json().catch(() => ({}));
-              throw new Error(body.error || `Failed to load favorites (${listRes.status})`);
-            }
-          } catch (fetchError) {
-            clearTimeout(timeoutId);
-            if (fetchError.name === 'AbortError') {
-              // request timed out; try again if attempts remain
-              if (attempt <= retries) {
-                await new Promise(r => setTimeout(r, 1000 * attempt));
-                continue;
-              }
-            }
-            if (attempt <= retries) {
-              await new Promise(r => setTimeout(r, 1000 * attempt));
-              continue;
-            }
-            // rethrow after retries exhausted
-            throw fetchError;
-          }
-        }
-      }
-
-      // If no token (or token failed), fallback to localStorage
-      try {
-        const favs = JSON.parse(window.localStorage.getItem('favorites') || '[]');
-        setFavoritesCount(favs.length);
-        setFavorites(favs);
-      } catch (e) {
-        setFavoritesCount(0);
-        setFavorites([]);
-      }
-    } catch (e) {
-      console.error('Failed to fetch favorites:', e);
-      setFavoritesError(e.message || 'Failed to load favorites');
-    } finally {
-      setFavoritesLoading(false);
-    }
-  }, [token]);
+  }, [searchTerm, getRecipes]);
 
   useEffect(() => {
     if (token && !showWelcome) {
@@ -338,7 +386,6 @@ const App = () => {
       window.localStorage.setItem('favorites', JSON.stringify(favs));
       setFavorites(favs);
       setFavoritesCount(favs.length);
-      setFavoritesError(e.message || 'Save failed');
     }
   }, [token, ownerId, fetchFavorites]);
 
@@ -425,66 +472,6 @@ const App = () => {
     setFavoritesCount(0);
   };
 
-  const getRecipes = async (query) => {
-    const q = query || searchTerm;
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Using TheMealDB API (free, no API key required)
-      const apiUrl = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(q)}`;
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(apiUrl, {
-        signal: controller.signal,
-        headers: { 'Accept': 'application/json' }
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      // Transform TheMealDB format to match existing Recipe component
-      const transformedRecipes = (data.meals || []).map(meal => ({
-        recipe: {
-          uri: meal.idMeal,
-          label: meal.strMeal,
-          image: meal.strMealThumb,
-          calories: Math.floor(Math.random() * 400) + 200, // TheMealDB doesn't provide calories
-          ingredients: Array.from({length: 20}, (_, i) => {
-            const ingredient = meal[`strIngredient${i + 1}`];
-            const measure = meal[`strMeasure${i + 1}`];
-            return ingredient && ingredient.trim() ? {
-              text: `${measure || ''} ${ingredient}`.trim(),
-              food: ingredient
-            } : null;
-          }).filter(Boolean)
-        }
-      }));
-      
-      setRecipes(transformedRecipes);
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        setError('Request timed out. Please check your internet connection and try again.');
-      } else {
-        setError(err.message || 'Failed to fetch recipes');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // Don't auto-fetch recipes on page load
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showWelcome]);
-
   const handleSearch = (event) => setSearchTerm(event.target.value);
 
   const handleSearchSubmit = (event) => {
@@ -507,7 +494,7 @@ const App = () => {
     );
   }
 
-  return (
+    return (
     <div className="App">
       <header className="header">
         <div className="brand" onClick={goHome}>
@@ -737,8 +724,6 @@ const App = () => {
             onRemove={removeByTitle}
           />
         ))}
-
-
       </div>
 
       {/* Modals */}
@@ -781,4 +766,3 @@ const App = () => {
 };
 
 export default App;
-

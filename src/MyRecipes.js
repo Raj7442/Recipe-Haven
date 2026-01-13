@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./App.css";
 
 const MyRecipes = ({ open, onClose, token, refresh }) => {
@@ -13,13 +13,7 @@ const MyRecipes = ({ open, onClose, token, refresh }) => {
   });
   const [viewingRecipe, setViewingRecipe] = useState(null);
 
-  useEffect(() => {
-    if (open) {
-      fetchMyRecipes();
-    }
-  }, [open]);
-
-  const fetchMyRecipes = async () => {
+  const fetchMyRecipes = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/recipes', {
@@ -34,7 +28,13 @@ const MyRecipes = ({ open, onClose, token, refresh }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (open) {
+      fetchMyRecipes();
+    }
+  }, [open, fetchMyRecipes]);
 
   const startEdit = (recipe) => {
     setEditingId(recipe.id);
