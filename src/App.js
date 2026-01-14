@@ -7,19 +7,6 @@ import MyRecipes from './MyRecipes';
 import WelcomePage from './WelcomePage';
 
 const App = () => {
-  // Use environment variables for credentials (read at build time)
-  const APP_ID = process.env.REACT_APP_EDAMAM_ID;
-  const APP_KEY = process.env.REACT_APP_EDAMAM_KEY;
-
-  // Debug logging for API credentials
-  useEffect(() => {
-    console.log('API Credentials Check:');
-    console.log('APP_ID exists:', !!APP_ID);
-    console.log('APP_KEY exists:', !!APP_KEY);
-    if (APP_ID) console.log('APP_ID length:', APP_ID.length);
-    if (APP_KEY) console.log('APP_KEY length:', APP_KEY.length);
-  }, [APP_ID, APP_KEY]);
-
   const [recipes, setRecipes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasSearched, setHasSearched] = useState(false);

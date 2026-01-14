@@ -188,6 +188,16 @@ app.delete('/api/recipes/:id', authenticateMiddleware, async (req, res) => {
   }
 });
 
+// Health check endpoint for Railway monitoring
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    database: db.dbReady ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Serve static files from the React app build
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'build')));
