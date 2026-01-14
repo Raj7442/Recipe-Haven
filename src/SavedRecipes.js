@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
 
-const API_BASE =
-  process.env.REACT_APP_API_URL || "http://localhost:3000";
-
 const SavedRecipes = ({ open, onClose, favorites = [], token, refresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
@@ -42,7 +39,7 @@ const SavedRecipes = ({ open, onClose, favorites = [], token, refresh }) => {
         .filter(Boolean)
         .map((text) => ({ text }));
 
-      const res = await fetch(`${API_BASE}/api/recipes/${id}`, {
+      const res = await fetch(`/api/recipes/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +69,7 @@ const SavedRecipes = ({ open, onClose, favorites = [], token, refresh }) => {
     if (!window.confirm("Delete this saved recipe?")) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/recipes/${id}`, {
+      const res = await fetch(`/api/recipes/${id}`, {
         method: "DELETE",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

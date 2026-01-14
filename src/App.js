@@ -438,11 +438,6 @@ const App = () => {
     setShowWelcome(false);
     setAuthError(null);
     
-    // Clear any cached favorites from previous sessions
-    try {
-      window.localStorage.removeItem('favorites');
-    } catch (e) {}
-    
     // Fetch favorites after successful auth
     setTimeout(() => {
       fetchFavorites(userData.token);
