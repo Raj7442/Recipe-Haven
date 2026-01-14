@@ -1,100 +1,291 @@
-# Recipe Haven
+# Recipe Haven 🍳
 
-Recipe Haven is a user-friendly food recipe app built with React.js. It allows users to browse and explore a wide variety of recipes fetched from an external API. Each recipe is presented in detail, including ingredients, cooking instructions, and nutritional information like calorie content.
+[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge)](https://recipe-haven-production.up.railway.app/)
+[![React](https://img.shields.io/badge/React-18.3.1-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18.x-green?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
 
-## Features
+> **🌐 Live Site:** [https://recipe-haven-production.up.railway.app/](https://recipe-haven-production.up.railway.app/)
 
-- **Dynamic Recipe Fetching**: Recipes are fetched from a public API and displayed dynamically in the app.
-- **Detailed Recipe View**: Each recipe includes comprehensive details such as ingredients, preparation steps, and calorie information.
-- **Responsive Design**: The app is designed to be fully responsive, providing a seamless experience across different devices.
+A modern, full-stack food recipe application built with React.js and Node.js. Browse thousands of recipes, save your favorites, and create your own custom recipes with user authentication and database persistence.
 
-## Technologies Used
+---
 
-- **Frontend**: React.js, JavaScript (ES6), HTML, CSS
-- **Data Fetching**: RESTful API
-- **State Management**: React Hooks (useState, useEffect)
+## ✨ Features
 
-## Getting Started
+- 🔍 **Recipe Search** - Search thousands of recipes from TheMealDB API
+- 💾 **Save Favorites** - Save recipes to your account with database persistence
+- ✏️ **Create Recipes** - Create and manage your own custom recipes
+- 🔐 **User Authentication** - Secure JWT-based authentication system
+- 📱 **Responsive Design** - Seamless experience across all devices
+- 🎨 **Modern UI** - Clean, interactive card-based interface
+- ⚡ **Real-time Updates** - Instant feedback and live search
+
+---
+
+## 🚀 Technologies Used
+
+### Frontend
+- **React.js** - UI framework
+- **JavaScript (ES6+)** - Programming language
+- **CSS3** - Styling and animations
+- **React Hooks** - State management (useState, useEffect, useCallback)
+
+### Backend
+- **Node.js** - Runtime environment
+- **Express.js** - Web server framework
+- **PostgreSQL** - Database
+- **JWT** - Authentication
+- **bcryptjs** - Password hashing
+
+### API
+- **TheMealDB API** - Free recipe data (no API key required)
+
+### Deployment
+- **Railway** - Cloud hosting platform
+- **GitHub** - Version control
+
+---
+
+## 🎯 Live Demo
+
+**Visit the live application:** [https://recipe-haven-production.up.railway.app/](https://recipe-haven-production.up.railway.app/)
+
+### Try it out:
+1. Sign up for a free account
+2. Search for recipes (try "chicken" or "pasta")
+3. Save your favorite recipes
+4. Create your own custom recipes
+5. Edit and manage your recipe collection
+
+---
+
+## 🛠️ Local Development
 
 ### Prerequisites
 
-Ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/)
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [PostgreSQL](https://www.postgresql.org/) (for database)
 - [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
 
-## UI updates (Modern, interactive)
+### Installation
 
-- Updated to a modern, responsive card-based UI with hover overlays and interactive buttons.
-- Each recipe card includes:
-  - Image with hover overlay
-  - Buttons: View (opens modal with ingredients), Save (stores to localStorage), Copy (copies title)
-  - Calories badge and ingredient count
-- Favorites are stored locally in `localStorage` and shown as a count in the header.
-
-## Environment variables (Edamam API)
-
-1. Create a `.env` file at the project root (do not commit it).
-2. Add:
-```
-REACT_APP_EDAMAM_ID=your_edamam_app_id
-REACT_APP_EDAMAM_KEY=your_edamam_app_key
-```
-3. Get credentials from https://developer.edamam.com/
-
-## Social Authentication (Optional)
-
-You can enable social sign-in (Google/GitHub) by setting OAuth entry points that your backend or OAuth provider redirects to. The app expects the following environment variables in your `.env` (or in Railway/Host settings):
-
-```
-REACT_APP_GOOGLE_AUTH_URL=https://your-server.com/auth/google
-REACT_APP_GITHUB_AUTH_URL=https://your-server.com/auth/github
+1. **Clone the repository:**
+```bash
+git clone https://github.com/Raj7442/Recipe-Haven---Food-Recipe-App..git
+cd Recipe-Haven---Food-Recipe-App.-main
 ```
 
-For local testing without a backend you can point these to the included simulator page:
-
-```
-REACT_APP_GOOGLE_AUTH_URL=http://localhost:3000/oauth-sim.html?token=demo-google
-REACT_APP_GITHUB_AUTH_URL=http://localhost:3000/oauth-sim.html?token=demo-github
+2. **Install dependencies:**
+```bash
+npm install
 ```
 
-How it works:
-- Clicking a social button opens a popup to the configured URL.
-- After authentication your server (or the simulator page) should redirect to a page that posts a message back to the main window with an object containing at least `{ token, username, id }`.
-- For local testing use the simulator at `public/oauth-sim.html` which will send a demo token back to the opener so you can test the popup flow.
+3. **Set up environment variables:**
 
-If you see “not configured” messages under the social buttons, set the two env vars above and restart the dev server (`npm start`).
+Create a `.env` file in the root directory:
+```env
+# Database (PostgreSQL)
+DATABASE_URL=postgres://user:password@localhost:5432/recipe_haven
 
-## Deploying to Railway
+# JWT Secret (generate with: openssl rand -base64 32)
+JWT_SECRET=your_jwt_secret_here
 
-- Option 1 (Static): Use Railway's Static Site — Build Command: `npm run build`, Publish Directory: `build`.
-- Option 2 (Node server): We included `server.js` and `express`; Railway can run `npm start` (which runs `node server.js`). Set env vars in Railway Variables.
+# Environment
+NODE_ENV=development
+```
 
-## Backend (Postgres) — added API
+4. **Start the development servers:**
 
-This project now includes a Postgres-backed API to store user recipes. It uses the `DATABASE_URL` env var (Railway Postgres provides this automatically).
+**Option 1: Use the batch file (Windows):**
+```bash
+start-dev-mode.bat
+```
 
-Authentication & JWT
-- Add `JWT_SECRET` to your environment (see `.env.example`).
-- Endpoints for auth are:
-  - `POST /api/auth/signup` — body `{ username, password }` → returns `{ token, id, username }`
-  - `POST /api/auth/login` — body `{ username, password }` → returns `{ token, id, username }`
-  - `GET /api/auth/me` — requires `Authorization: Bearer <token>` → returns `{ id, username }`
+**Option 2: Manual start (two terminals):**
 
-Protected API endpoints (use Authorization header with token):
-- GET `/api/recipes` — list recipes for authenticated user
-- GET `/api/recipes/count` — returns `{ count: n }`
-- POST `/api/recipes` — body `{ title, image, calories, ingredients }` (server uses authenticated user id)
-- PUT `/api/recipes/:id` — body `{ title?, image?, calories?, ingredients? }` (authenticated only)
-- DELETE `/api/recipes/:id` — authenticated only
+Terminal 1 - Backend:
+```bash
+node server.js
+```
 
-Setup locally:
-1. Install dependencies: `npm install` (adds `pg`, `bcryptjs`, `jsonwebtoken`)
-2. Set `DATABASE_URL` pointing to a Postgres instance (e.g., `postgres://user:pass@localhost:5432/yourdb`) and `JWT_SECRET`.
-3. Start server: `npm start` (server will auto-create the `recipes` and `users` tables on first run)
+Terminal 2 - Frontend:
+```bash
+npm run start-client
+```
 
-Note: The frontend supports anonymous (localStorage) saves and authenticated saves. For multi-device/wider user support, sign up and log in; saved recipes will be tied to your account.
+5. **Open your browser:**
+```
+http://localhost:3000
+```
 
-Create / manage recipes: Logged-in users can create new recipes using the **New Recipe** button in the header, and edit or delete their saved recipes from the Saved Recipes view.
+---
 
+## 📦 Available Scripts
 
+```bash
+npm start              # Start production server
+npm run start-client   # Start React dev server (port 3000)
+npm run build          # Build for production
+npm test              # Run tests
+```
+
+---
+
+## 🗄️ Database Schema
+
+### Users Table
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Recipes Table
+```sql
+CREATE TABLE recipes (
+  id SERIAL PRIMARY KEY,
+  owner_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  image TEXT,
+  calories NUMERIC,
+  ingredients JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 🔐 API Endpoints
+
+### Authentication
+- `POST /api/auth/signup` - Create new account
+- `POST /api/auth/login` - Login to account
+- `GET /api/auth/me` - Get current user (requires auth)
+
+### Recipes (Protected)
+- `GET /api/recipes` - Get user's recipes
+- `GET /api/recipes/count` - Get recipe count
+- `POST /api/recipes` - Create new recipe
+- `PUT /api/recipes/:id` - Update recipe
+- `DELETE /api/recipes/:id` - Delete recipe
+
+### Health Check
+- `GET /health` - Server health status
+
+---
+
+## 🚢 Deployment
+
+### Deploy to Railway
+
+1. **Push to GitHub:**
+```bash
+git add .
+git commit -m "Ready for deployment"
+git push origin main
+```
+
+2. **Create Railway Project:**
+- Go to [railway.app](https://railway.app)
+- Click "New Project" → "Deploy from GitHub repo"
+- Select your repository
+
+3. **Add PostgreSQL Database:**
+- Click "+ New" → "Database" → "PostgreSQL"
+- `DATABASE_URL` is automatically configured
+
+4. **Set Environment Variables:**
+```
+NODE_ENV=production
+JWT_SECRET=<your-generated-secret>
+```
+
+5. **Deploy:**
+- Railway automatically builds and deploys
+- Generate domain to get your live URL
+
+---
+
+## 🎨 Features in Detail
+
+### User Authentication
+- Secure JWT-based authentication
+- Password hashing with bcryptjs
+- Persistent login sessions
+- Protected routes and API endpoints
+
+### Recipe Management
+- Search recipes from TheMealDB API
+- Save recipes to your account
+- Create custom recipes with ingredients
+- Edit and delete your recipes
+- View detailed recipe information
+
+### Modern UI/UX
+- Responsive card-based layout
+- Interactive hover effects
+- Modal dialogs for recipe details
+- Real-time search suggestions
+- Loading states and error handling
+- Smooth animations and transitions
+
+---
+
+## 📝 Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NODE_ENV` | Yes | Environment (development/production) |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | Secret key for JWT tokens |
+| `PORT` | No | Server port (default: 3002) |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+## 👨‍💻 Author
+
+**Raj**
+- GitHub: [@Raj7442](https://github.com/Raj7442)
+
+---
+
+## 🙏 Acknowledgments
+
+- [TheMealDB](https://www.themealdb.com/) - Free recipe API
+- [Railway](https://railway.app/) - Hosting platform
+- [React](https://reactjs.org/) - Frontend framework
+- [PostgreSQL](https://www.postgresql.org/) - Database
+
+---
+
+## 📞 Support
+
+If you have any questions or need help, please open an issue on GitHub.
+
+---
+
+**⭐ Star this repository if you found it helpful!**
+
+**🌐 Live Demo:** [https://recipe-haven-production.up.railway.app/](https://recipe-haven-production.up.railway.app/)
