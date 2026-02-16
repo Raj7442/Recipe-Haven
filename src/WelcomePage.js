@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./WelcomePage.css";
 
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 const WelcomePage = ({
   onAuthSuccess,
   isLoading,
@@ -50,7 +52,7 @@ const WelcomePage = ({
     setError(null);
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
+      const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/signup`;
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

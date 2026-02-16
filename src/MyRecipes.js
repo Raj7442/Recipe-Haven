@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./App.css";
 
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 const MyRecipes = ({ open, onClose, token, refresh }) => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,7 +18,7 @@ const MyRecipes = ({ open, onClose, token, refresh }) => {
   const fetchMyRecipes = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/recipes', {
+      const res = await fetch(`${API_URL}/api/recipes`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (res.ok) {
@@ -59,7 +61,7 @@ const MyRecipes = ({ open, onClose, token, refresh }) => {
         .filter(Boolean)
         .map(text => ({ text }));
 
-      const res = await fetch(`/api/recipes/${id}`, {
+      const res = await fetch(`${API_URL}/api/recipes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +89,7 @@ const MyRecipes = ({ open, onClose, token, refresh }) => {
     if (!window.confirm('Delete this recipe?')) return;
     
     try {
-      const res = await fetch(`/api/recipes/${id}`, {
+      const res = await fetch(`${API_URL}/api/recipes/${id}`, {
         method: 'DELETE',
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });

@@ -6,6 +6,8 @@ import CreateRecipeModal from './CreateRecipeModal';
 import MyRecipes from './MyRecipes';
 import WelcomePage from './WelcomePage';
 
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 const App = () => {
   const [recipes, setRecipes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,7 +71,7 @@ const App = () => {
           const timeoutId = setTimeout(() => controller.abort(), timeout);
 
           try {
-            const meRes = await fetch('/api/auth/me', {
+            const meRes = await fetch(`${API_URL}/api/auth/me`, {
               headers: { Authorization: `Bearer ${currentToken}` },
               signal: controller.signal
             });
@@ -85,7 +87,7 @@ const App = () => {
               throw new Error('Authentication failed');
             }
 
-            const listRes = await fetch('/api/recipes', {
+            const listRes = await fetch(`${API_URL}/api/recipes`, {
               headers: { Authorization: `Bearer ${currentToken}` },
               signal: controller.signal
             });
@@ -149,7 +151,7 @@ const App = () => {
     const validateToken = async () => {
       if (token) {
         try {
-          const res = await fetch('/api/auth/me', {
+          const res = await fetch(`${API_URL}/api/auth/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -343,7 +345,7 @@ const App = () => {
       if (token) headers.Authorization = `Bearer ${token}`;
       else payload.ownerId = ownerId;
 
-      const res = await fetch('/api/recipes', { method: 'POST', headers, body: JSON.stringify(payload) });
+      const res = await fetch(`${API_URL}/api/recipes`, { method: 'POST', headers, body: JSON.stringify(payload) });
       if (!res.ok) {
         // Treat non-OK responses as errors so we fall back to localStorage
         const body = await res.json().catch(() => ({}));
@@ -381,7 +383,7 @@ const App = () => {
       let headers = {};
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch(`/api/recipes/${id}`, { method: 'DELETE', headers });
+      const res = await fetch(`${API_URL}/api/recipes/${id}`, { method: 'DELETE', headers });
       if (res.ok) {
         setFavorites((s) => {
           const next = s.filter((r) => String(r.id) !== String(id));

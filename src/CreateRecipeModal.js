@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './App.css';
 
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 const CreateRecipeModal = ({ open, onClose, token, onCreated }) => {
   const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
@@ -36,7 +38,7 @@ const CreateRecipeModal = ({ open, onClose, token, onCreated }) => {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch('/api/recipes', { method: 'POST', headers, body: JSON.stringify(payload) });
+      const res = await fetch(`${API_URL}/api/recipes`, { method: 'POST', headers, body: JSON.stringify(payload) });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || 'Failed to save recipe');
