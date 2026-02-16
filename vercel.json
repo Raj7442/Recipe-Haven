@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "echo 'Using pre-built files'",
   "outputDirectory": "build",
-  "framework": null
+  "installCommand": "echo 'No install needed'"
 }
