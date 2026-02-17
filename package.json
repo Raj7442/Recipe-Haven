@@ -27,7 +27,7 @@
     "start": "node server.js",
     "start-api": "node api-server.js",
     "start-client": "react-scripts start",
-    "build": "react-scripts build",
+    "build-local": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
