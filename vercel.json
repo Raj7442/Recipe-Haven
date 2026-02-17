@@ -4,7 +4,7 @@
   "github": {
     "silent": true
   },
-  "buildCommand": null,
+  "buildCommand": "bash build.sh",
   "devCommand": null,
-  "installCommand": null
+  "installCommand": "echo skip"
 }
