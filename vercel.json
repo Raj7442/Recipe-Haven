@@ -6,6 +6,5 @@
   },
   "buildCommand": null,
   "devCommand": null,
-  "installCommand": null,
-  "outputDirectory": "build"
+  "installCommand": null
 }

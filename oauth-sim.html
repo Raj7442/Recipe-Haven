@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>OAuth Simulator</title>
+    <style>
+      body { font-family: Inter, system-ui, -apple-system, Arial; display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#fff }
+      .card { background:rgba(255,255,255,0.03); padding:24px;border-radius:12px;max-width:520px;text-align:center }
+      input, button { padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff;margin-top:8px }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>OAuth Simulator</h2>
+      <p>This page simulates an OAuth provider callback and will postMessage a token back to the opener window.</p>
+      <p style="font-size:0.9rem;opacity:0.85">If you opened this page via the app social-sign-in button, click <strong>Send token</strong>.</p>
+
+      <label>Token (query param or enter custom):</label>
+      <input id="tokenInput" type="text" placeholder="demo-token" />
+      <div>
+        <button id="sendBtn">Send token</button>
+        <button id="closeBtn">Close</button>
+      </div>
+      <p style="font-size:0.85rem;opacity:0.75;margin-top:12px">Tip: Use <code>?token=demo-google</code> in the URL to pre-fill.</p>
+    </div>
+
+    <script>
+      (function(){
+        const params = new URLSearchParams(location.search);
+        const pre = params.get('token') || '';
+        const input = document.getElementById('tokenInput');
+        input.value = pre || 'demo-token';
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+          const token = input.value || 'demo-token';
+          const payload = { token, username: 'oauth-user', id: 'oauth-'+Math.random().toString(36).slice(2,8) };
+          try {
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage(payload, '*');
+            }
+          } catch(e) {
+            // ignore
+          }
+        });
+
+        document.getElementById('closeBtn').addEventListener('click', () => window.close());
+
+        // Auto-send after 1s if token param provided
+        if (pre) setTimeout(()=>{ document.getElementById('sendBtn').click(); }, 900);
+      })();
+    </script>
+  </body>
+</html>
