@@ -5,3 +5,5 @@ public
 server
 *.md
 .env
+package.json
+package-lock.json
