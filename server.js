@@ -198,12 +198,29 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  } else {
+    res.json({ message: 'Recipe Haven API - Server is running' });
+  }
+});
+
 // Serve static files from the React app build
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'build')));
-  
-  // Fallback to index.html for client-side routing (SPA)
+}
+
+// API routes must come BEFORE the catch-all route
+// (All your existing API routes are already above)
+
+// Catch-all handler: send back React's index.html for any request that doesn't match API routes
+if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
+    // Don't catch API routes
+    if (req.path.startsWith('/api/') || req.path === '/health') {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
 }
