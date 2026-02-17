@@ -1,10 +1,21 @@
 {
-  "version": 2,
-  "public": true,
-  "github": {
-    "silent": true
-  },
   "buildCommand": "bash build.sh",
-  "devCommand": null,
-  "installCommand": "echo skip"
+  "installCommand": "echo skip",
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
